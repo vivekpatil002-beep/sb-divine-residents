@@ -406,16 +406,75 @@ const Dashboard = ({
       ) : (
         <div className="expenses-tab">
           {isAdmin && (
-            <form
-              className="expense-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.target as HTMLFormElement;
-              }}
+  <form
+    className="expense-form"
+    onSubmit={(e) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+
+      const desc = (form.elements.namedItem("desc") as HTMLInputElement).value;
+      const amt = (form.elements.namedItem("amt") as HTMLInputElement).value;
+      const date = (form.elements.namedItem("date") as HTMLInputElement).value;
+
+      if (!desc || !amt) return;
+
+      setExpenses((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          description: desc,
+          amount: parseFloat(amt),
+          date,
+        },
+      ]);
+
+      form.reset();
+    }}
+  >
+    <input name="desc" placeholder="Description" />
+    <input name="amt" type="number" placeholder="Amount" />
+    <input
+      name="date"
+      type="date"
+      defaultValue={new Date().toISOString().split("T")[0]}
+    />
+    <button type="submit">Add Expense</button>
+  </form>
+)}
+
+<table className="expense-table">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Description</th>
+      <th>Amount</th>
+      {isAdmin && <th>Action</th>}
+    </tr>
+  </thead>
+
+  <tbody>
+    {expenses.map((e) => (
+      <tr key={e.id}>
+        <td>{e.date}</td>
+        <td>{e.description}</td>
+        <td>₹{e.amount}</td>
+
+        {isAdmin && (
+          <td>
+            <button
+              onClick={() =>
+                setExpenses((prev) => prev.filter((x) => x.id !== e.id))
+              }
             >
-              {/* Admin expense inputs implemented in Part 3 */}
-            </form>
-          )}
+              Delete
+            </button>
+          </td>
+        )}
+      </tr>
+    ))}
+  </tbody>
+</table>
+
 
           {/* Expenses table implemented in Part 3 */}
         </div>
@@ -541,7 +600,17 @@ const App = () => {
               shopMonthlyFee: 200,
             }
           );
-        } else {
+          // Fix: When resident logs in, update their data after Firestore loads
+  if (currentUser?.role === "resident") {
+    const updated = data.residents?.find(
+      (r: any) => r.email === currentUser.resident.email
+    );
+
+    if (updated) {
+      setCurrentUser({ role: "resident", resident: updated });
+    }
+  }
+        }else {
           // Create Firestore doc from local fallback
           setDoc(ref, {
             residents: localResidents,
