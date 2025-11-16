@@ -474,6 +474,30 @@ const Dashboard = ({
     ))}
   </tbody>
 </table>
+<div className="expense-summary">
+  <p><b>Total Collected:</b> ₹{totalCollected}</p>
+  <p><b>Total Expenses:</b> ₹{totalExpenses}</p>
+  <p><b>Total Due:</b> ₹{
+    residents.reduce(
+      (sum, r) =>
+        sum +
+        (r.previousDue +
+          Array.from({ length: new Date().getMonth() + 1 })
+            .map((_, i) =>
+              Math.max(
+                (r.id.startsWith("flat")
+                  ? maintenanceSettings.flatMonthlyFee
+                  : maintenanceSettings.shopMonthlyFee) -
+                  (r.payments[i] || 0),
+                0
+              )
+            )
+            .reduce((a, b) => a + b, 0)),
+      0
+    )
+  }</p>
+  <p><b>Cash on Hand:</b> ₹{totalCollected - totalExpenses}</p>
+</div>
 
 
           {/* Expenses table implemented in Part 3 */}
